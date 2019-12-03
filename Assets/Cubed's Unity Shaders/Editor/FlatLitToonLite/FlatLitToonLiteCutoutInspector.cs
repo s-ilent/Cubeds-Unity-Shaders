@@ -79,6 +79,14 @@ namespace CubedsUnityShaders
                 materialEditor.ShaderProperty(shadow, "Shadow");
             }
             EditorGUI.EndChangeCheck();
+            
+            GUIContent annoyingButton = new GUIContent("Upgrade your shading!","This button opens up the page for Silent's Cel Shading Shader. Really, any other supported shader's a good upgrade from this depreciated one, but this version of Cubed's is a stripped down version of mine, so won't you try it out?");
+
+            EditorGUILayout.Space();
+            if (GUILayout.Button(annoyingButton, "button"))
+            {
+               Application.OpenURL("https://gitlab.com/s-ilent/SCSS");
+            }
 
         }
     }

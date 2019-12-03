@@ -3,6 +3,10 @@ This shader is **no longer updated** and is considered deprecated. It may not op
 
 You are strongly encouraged to use another shader!
 
+# However...
+
+I've updated this to a variant with the insides torn out and replaced with those from [my shader](https://gitlab.com/s-ilent/SCSS). This is mainly for people who might need to rapidly update a large volume of avatars and don't want to upgrade the materials in the process. This variant **keeps the same material properties**, so materials do not need to be altered. However, it is guaranteed to work on Unity 2018 and contains improvements to the internal shading functions to resolve a few issues. It's not guaranteed to look the same, but you won't notice a difference in most scenarios. 
+
 Cubed's Unity Shaders
 ============
 

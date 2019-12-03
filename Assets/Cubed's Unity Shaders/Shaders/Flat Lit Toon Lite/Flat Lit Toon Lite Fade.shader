@@ -26,60 +26,33 @@ Shader "CubedParadox/Flat Lit Toon Lite Fade"
             ZWrite Off
 
 			CGPROGRAM
+			#define UNITY_PASS_FORWARDBASE
+			#pragma multi_compile _ VERTEXLIGHT_ON
+			#pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+
             #define _ALPHABLEND_ON 1
-			#include "..\CGIncludes\FlatLitToonCoreLite.cginc"
-			#pragma vertex vert
-			#pragma fragment frag 
+
+			#define SCSS_NO_RAMP_TEXTURE 1
+
+			#include "UnityCG.cginc"
+			#include "AutoLight.cginc" 
+			#include "Lighting.cginc"
+			
+			#include "..\CGIncludes\SCSS_Utils.cginc"
+			#include "..\CGIncludes\SCSS_SimpleInput.cginc"
+			#include "..\CGIncludes\SCSS_UnityGI.cginc"
+			#include "..\CGIncludes\SCSS_SimpleCore.cginc"
+
+			#pragma vertex vert_nogeom
+			#pragma fragment frag_simple
+
+			#include "..\CGIncludes\SCSS_Forward.cginc"
 
 			#pragma only_renderers d3d11 glcore gles
 			#pragma target 4.0
 
 			#pragma multi_compile_fwdbase
 			#pragma multi_compile_fog
-
-			float4 frag(VertexOutput i) : COLOR
-			{
-				float4 objPos = mul(unity_ObjectToWorld, float4(0,0,0,1));
-				i.normalDir = normalize(i.normalDir);
-				float3x3 tangentTransform = float3x3(i.tangentDir, i.bitangentDir, i.normalDir);
-				float3 _BumpMap_var = UnpackNormal(tex2D(_BumpMap,TRANSFORM_TEX(i.uv0, _BumpMap)));
-				float3 normalDirection = normalize(mul(_BumpMap_var.rgb, tangentTransform)); // Perturbed normals
-				float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
-				
-				float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
-				float3 lightColor = _LightColor0.rgb;
-				UNITY_LIGHT_ATTENUATION(attenuation, i, i.posWorld.xyz);
-
-				float4 _EmissionMap_var = tex2D(_EmissionMap,TRANSFORM_TEX(i.uv0, _EmissionMap));
-				float3 emissive = (_EmissionMap_var.rgb*_EmissionColor.rgb);
-				float4 _ColorMask_var = tex2D(_ColorMask,TRANSFORM_TEX(i.uv0, _ColorMask));
-				float4 baseColor = lerp((_MainTex_var.rgba*_Color.rgba),_MainTex_var.rgba,_ColorMask_var.r);
-				baseColor *= float4(i.col.rgb, 1);
-				
-				float3 lightmap = float4(1.0,1.0,1.0,1.0);
-				#ifdef LIGHTMAP_ON
-				lightmap = DecodeLightmap(UNITY_SAMPLE_TEX2D(unity_Lightmap, i.uv1 * unity_LightmapST.xy + unity_LightmapST.zw));
-				#endif
-
-				float3 reflectionMap = DecodeHDR(UNITY_SAMPLE_TEXCUBE_LOD(unity_SpecCube0, normalize((_WorldSpaceCameraPos - objPos.rgb)), 7), unity_SpecCube0_HDR)* 0.02;
-
-				float grayscalelightcolor = dot(_LightColor0.rgb, grayscale_vector);
-				float bottomIndirectLighting = grayscaleSH9(float3(0.0, -1.0, 0.0));
-				float topIndirectLighting = grayscaleSH9(float3(0.0, 1.0, 0.0));
-				float grayscaleDirectLighting = dot(lightDirection, normalDirection)*grayscalelightcolor*attenuation + grayscaleSH9(normalDirection);
-
-				float lightDifference = topIndirectLighting + grayscalelightcolor - bottomIndirectLighting;
-				float remappedLight = (grayscaleDirectLighting - bottomIndirectLighting) / lightDifference;
-
-				float3 indirectLighting = saturate((ShadeSH9(half4(0.0, -1.0, 0.0, 1.0)) + reflectionMap));
-				float3 directLighting = saturate((ShadeSH9(half4(0.0, 1.0, 0.0, 1.0)) + reflectionMap + _LightColor0.rgb));
-				float3 directContribution = saturate((1.0 - _Shadow) + floor(saturate(remappedLight) * 2.0));
-				float3 finalColor = emissive + (baseColor * lerp(indirectLighting, directLighting, directContribution));
-				fixed4 finalRGBA = fixed4(finalColor * lightmap, baseColor.a);
-
-				UNITY_APPLY_FOG(i.fogCoord, finalRGBA);
-				return finalRGBA;
-			}
 			ENDCG
 		}
 
@@ -91,44 +64,34 @@ Shader "CubedParadox/Flat Lit Toon Lite Fade"
 			Blend SrcAlpha One
             ZWrite Off
             Cull [_Cull]
-
+            
 			CGPROGRAM
             #define _ALPHABLEND_ON 1
-			#include "..\CGIncludes\FlatLitToonCoreLite.cginc"
-			#pragma vertex vert
-			#pragma fragment frag
+			#define UNITY_PASS_FORWARDADD
+			#pragma multi_compile _ VERTEXLIGHT_ON
+			#pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+
+			#define SCSS_NO_RAMP_TEXTURE 1
+
+			#include "UnityCG.cginc"
+			#include "AutoLight.cginc" 
+			#include "Lighting.cginc"
+			
+			#include "..\CGIncludes\SCSS_Utils.cginc"
+			#include "..\CGIncludes\SCSS_SimpleInput.cginc"
+			#include "..\CGIncludes\SCSS_UnityGI.cginc"
+			#include "..\CGIncludes\SCSS_SimpleCore.cginc"
+
+			#pragma vertex vert_nogeom
+			#pragma fragment frag_simple
+
+			#include "..\CGIncludes\SCSS_Forward.cginc"
 
 			#pragma only_renderers d3d11 glcore gles
 			#pragma target 4.0
 
 			#pragma multi_compile_fwdadd_fullshadows
 			#pragma multi_compile_fog
-
-			float4 frag(VertexOutput i) : COLOR
-			{
-				float4 objPos = mul(unity_ObjectToWorld, float4(0,0,0,1));
-				i.normalDir = normalize(i.normalDir);
-				float3x3 tangentTransform = float3x3(i.tangentDir, i.bitangentDir, i.normalDir);
-				float3 _BumpMap_var = UnpackNormal(tex2D(_BumpMap,TRANSFORM_TEX(i.uv0, _BumpMap)));
-				float3 normalDirection = normalize(mul(_BumpMap_var.rgb, tangentTransform)); // Perturbed normals
-				float4 _MainTex_var = tex2D(_MainTex,TRANSFORM_TEX(i.uv0, _MainTex));
-
-				float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
-				float3 lightColor = _LightColor0.rgb;
-				UNITY_LIGHT_ATTENUATION(attenuation, i, i.posWorld.xyz);
-	
-				float4 _ColorMask_var = tex2D(_ColorMask,TRANSFORM_TEX(i.uv0, _ColorMask));
-				float4 baseColor = lerp((_MainTex_var.rgba*_Color.rgba),_MainTex_var.rgba,_ColorMask_var.r);
-				baseColor *= float4(i.col.rgb, 1);
-
-				float lightContribution = dot(normalize(_WorldSpaceLightPos0.xyz - i.posWorld.xyz),normalDirection)*attenuation;
-				float3 directContribution = floor(saturate(lightContribution) * 2.0);
-				float3 finalColor = baseColor * lerp(0, _LightColor0.rgb, saturate(directContribution + ((1 - _Shadow) * attenuation)));
-				fixed4 finalRGBA = fixed4(finalColor,baseColor.a);
-
-				UNITY_APPLY_FOG(i.fogCoord, finalRGBA);
-				return finalRGBA;
-			}
 			ENDCG
 		}
 
@@ -142,7 +105,7 @@ Shader "CubedParadox/Flat Lit Toon Lite Fade"
 
 			CGPROGRAM
             #define _ALPHABLEND_ON 1
-			#include "..\CGIncludes\FlatLitToonShadows.cginc"
+			#include "..\CGIncludes\SCSS_Shadows.cginc"
 			#pragma multi_compile_shadowcaster
 			#pragma fragmentoption ARB_precision_hint_fastest
 
